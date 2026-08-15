@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TLS Config Enhancer</title>
+    <meta name="description" content="بهینه‌سازی دسته‌ای کانفیگ‌های VLESS و Trojan با TLS — افزودن cipher suites, fragment mask و fingerprint">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+</head>
+<body>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+    <div class="bg-glow bg-glow-3"></div>
+
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">🛡️</span>
+                <h1>TLS Config Enhancer</h1>
+            </div>
+            <p class="subtitle">
+                بهینه‌سازی دسته‌ای کانفیگ‌های VLESS و Trojan با TLS
+            </p>
+            <div class="protocol-badges">
+                <span class="badge badge-vless">VLESS</span>
+                <span class="badge badge-trojan">Trojan</span>
+                <span class="badge badge-tls">TLS Only</span>
+                <span class="badge badge-batch">Batch</span>
+            </div>
+        </header>
+
+        <div class="main-card">
+            <div class="card-header-row">
+                <div class="card-title-group">
+                    <span class="card-icon">📋</span>
+                    <div>
+                        <h2>کانفیگ‌ها را اینجا بچسبانید</h2>
+                        <p class="card-hint">هر خط یک کانفیگ جداگانه — فقط VLESS و Trojan با <code>security=tls</code> پردازش میشوند</p>
+                    </div>
+                </div>
+                <button class="btn-clear" id="clear-btn" title="پاک‌سازی">✕</button>
+            </div>
+            <textarea id="config-input" class="config-input" placeholder="vless://uuid@server:443?type=ws&security=tls&sni=example.com&path=%2F#remark1
+trojan://password@server:443?type=grpc&security=tls&sni=example.com&serviceName=myservice#remark2
+...
+" spellcheck="false" dir="ltr"></textarea>
+
+            <div class="options-bar">
+                <div class="badges-row">
+                    <span class="opt-badge fp-badge">fp = unsafe</span>
+                    <span class="opt-badge cs-badge">cs = 14 cipher suites</span>
+                    <span class="opt-badge fm-badge">fm = fragment mask</span>
+                </div>
+                <button class="btn-enhance" id="enhance-btn" disabled>
+                    <span class="btn-icon">⚡</span>
+                    پردازش و بهینه‌سازی
+                </button>
+            </div>
+        </div>
+
+        <div id="results-section" class="results-section" style="display:none;">
+            <div class="stats-grid">
+                <div class="stat-card stat-total">
+                    <div class="stat-number" id="stat-total">0</div>
+                    <div class="stat-label">کل کانفیگ‌ها</div>
+                </div>
+                <div class="stat-card stat-enhanced">
+                    <div class="stat-number" id="stat-enhanced">0</div>
+                    <div class="stat-label">بهینه‌سازی شده</div>
+                </div>
+                <div class="stat-card stat-skipped">
+                    <div class="stat-number" id="stat-skipped">0</div>
+                    <div class="stat-label">رد شده</div>
+                </div>
+            </div>
+
+            <div id="enhanced-section" class="output-card enhanced-card" style="display:none;">
+                <div class="output-header">
+                    <div class="output-title">
+                        <span class="output-icon">✅</span>
+                        <h3>کانفیگ‌های بهینه‌سازی شده</h3>
+                    </div>
+                    <div class="output-actions">
+                        <button class="btn-action" id="copy-btn">
+                            <span class="action-icon">📋</span> کپی
+                        </button>
+                        <button class="btn-action btn-download" id="download-btn">
+                            <span class="action-icon">💾</span> دانلود
+                        </button>
+                    </div>
+                </div>
+                <div class="output-box">
+                    <pre id="enhanced-output" dir="ltr"></pre>
+                </div>
+            </div>
+
+            <div id="skipped-section" class="output-card skipped-card" style="display:none;">
+                <div class="output-header">
+                    <div class="output-title">
+                        <span class="output-icon">⚠️</span>
+                        <h3>کانفیگ‌های رد شده (<span id="skipped-count">0</span>)</h3>
+                    </div>
+                </div>
+                <p class="skipped-desc">این کانفیگ‌ها پردازش نشدن چون TLS ندارن یا پروتکلشون پشتیبانی نمیشه
+                </p>
+                <div id="skipped-list" class="skipped-list"></div>
+            </div>
+        </div>
+
+        <details class="info-section">
+            <summary>❓ این ابزار چی کار میکن؟</summary>
+            <div class="info-content">
+                <p>این ابزار تنها کانفیگ‌های <strong>VLESS</strong> و <strong>Trojan</strong> که <strong>security=tls</strong> دارن رو پردازش میکنه و سه پارامتر بهشون اضافه میکنه:</p>
+                <ul>
+                    <li><strong>fp</strong> — TLS Fingerprint مقدار <code>unsafe</code></li>
+                    <li><strong>cs</strong> — 14 تا Cipher Suite برای TLS Handshake</li>
+                    <li><strong>fm</strong> — Final Mask / Fragment برای TLS Hello Fragmentation</li>
+                </ul>
+                <p>کانفیگ‌هایی که <code>security=reality</code> دارن یا پروتکلشون VLESS/Trojan نیست، رد میشن.</p>
+                <h4>پیش‌نیاز کلاینت</h4>
+                <ul>
+                    <li><strong>Windows</strong> — v2rayN نسخه <strong>7.24.7</strong> یا بالاتر</li>
+                    <li><strong>Android</strong> — <a href="https://github.com/patterniha/PattNG" target="_blank">PattNG</a> یا v2rayNG نسخه <strong>2.3.4</strong> یا بالاتر</li>
+                </ul>
+            </div>
+        </details>
+
+        <footer class="footer">
+            <div class="credits">
+                <p class="credits-title">تشکر و حق کپیرایت</p>
+                <p>این پروژه صرفاً برای راحت‌تر کردن فرآیند بهینه‌سازی کانفیگ‌ها ساخته شده و تمامی منطق اصلی مربوط به پروژه‌های زیر است:</p>
+                <ul class="credits-list">
+                    <li>
+                        <a href="https://github.com/Hidden-Node/proxy-builder" target="_blank">اسکریپت اصلی Proxy Builder</a> — <a href="https://github.com/Hidden-Node" target="_blank">Hidden-Node</a>
+                    </li>
+                    <li>
+                        <a href="https://github.com/patterniha/PattNG" target="_blank">منطق cs / fm / fp از PattNG</a> — <a href="https://github.com/patterniha" target="_blank">patterniha</a>
+                    </li>
+                    <li>
+                        <a href="https://github.com/bia-pain-bache/BPB-Worker-Panel" target="_blank">BPB Worker Panel</a> — <a href="https://github.com/bia-pain-bache" target="_blank">bia-pain-bache</a>
+                    </li>
+                </ul>
+                <p class="credits-note">تمامی حقوق مربوط به پروژه‌های اصلی و سازندگانشان محفوظ است. این پروژه یک ابزار جانبی برای راحت‌تر کردن فرآیند استفاده از آن‌ها است.
+                </p>
+            </div>
+            <div class="license">
+                <p>این پروژه <a href="https://github.com/your-username/tls-config-enhancer" target="_blank">اپن‌سورس</a> هست و تحت لایسنس <a href="https://opensource.org/licenses/MIT" target="_blank">MIT</a> منتشر شده.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
