@@ -170,7 +170,7 @@
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.createObjectURL(url);
+        URL.revokeObjectURL(url);
     }
 
     function onClear() {
