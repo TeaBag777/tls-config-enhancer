@@ -4,11 +4,27 @@
     var DEFAULT_CIPHER = 'TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256:TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA:TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA:TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256';
 
     var DEFAULT_FM = JSON.stringify({
-        tcp: [
-            { type: 'fragment', settings: { packets: 'tlshello', lengths: ['5', '94', '1'], delays: ['0'], maxSplit: '0' } },
-            { type: 'fragment', settings: { packets: '1-1', lengths: ['109', '1'], delays: ['1'], maxSplit: '355' } }
-        ]
-    });
+    tcp: [
+        {
+            type: 'fragment',
+            settings: {
+                packets: 'tlshello',
+                lengths: ['0', '104', '1'],
+                delays: ['0'],
+                maxSplit: '0'
+            }
+        },
+        {
+            type: 'fragment',
+            settings: {
+                packets: '1-1',
+                lengths: ['114', '1'],
+                delays: ['1'],
+                maxSplit: '11'
+            }
+        }
+    ]
+});
 
     var DEFAULT_FP = 'unsafe';
 
@@ -54,6 +70,7 @@
         u.searchParams.set('fp', DEFAULT_FP);
         u.searchParams.set('cs', DEFAULT_CIPHER);
         u.searchParams.set('fm', DEFAULT_FM);
+        u.searchParams.set('alpn', 'http/1.1');
 
         var result = u.toString();
         result = result.replace(/\+/g, '%20');
