@@ -245,7 +245,7 @@ enhanced-configs-<timestamp>.txt
 
 ## پیش‌نیاز کلاینت
 
-- **Windows** — v2rayN نسخه **7.24.7** یا بالاتر
+- **Windows** — [PattN](https://github.com/patterniha/PattN) 
 - **Android** — [PattNG](https://github.com/patterniha/PattNG) یا v2rayNG نسخه **2.3.4** یا بالاتر
 
 ## تشکر و حق کپیرایت
